@@ -1,28 +1,29 @@
 import os
-from telethon import TelegramClient, events
 import yt_dlp
+from telethon import TelegramClient, events
 
 # Telegram API credentials
-api_id = '8349121'
-api_hash = '9709d9b8c6c1aa3dd50107f97bb9aba6'
-bot_token = '5707293090:AAHGLlHSx101F8T1DQYdcb9_MkRAjyCbt70'
+api_id = 'YOUR_API_ID'
+api_hash = 'YOUR_API_HASH'
+bot_token = 'YOUR_BOT_TOKEN'
 
 # Initialize the Telethon client
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
-# Function to download YouTube video using yt-dlp
+# Function to download YouTube video using yt-dlp with cookies for authentication
 def download_youtube_video(url):
     try:
-        # yt-dlp options to download video with the best quality
+        # yt-dlp options with cookies for authentication
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',  # Best video and audio quality
+            'format': 'bestvideo+bestaudio/best',  # Best quality video and audio
             'outtmpl': '%(title)s.%(ext)s',        # Name the file after the video title
-            'merge_output_format': 'mp4'           # Merge into an mp4 file
+            'merge_output_format': 'mp4',          # Merge into an mp4 file
+            'cookies': '/cookies.txt'       # Path to the cookies.txt file
         }
-        
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
-            video_file = ydl.prepare_filename(info_dict)  # Get the downloaded file name
+            video_file = ydl.prepare_filename(info_dict)
         return video_file
     except Exception as e:
         print(f"Error downloading video: {e}")
