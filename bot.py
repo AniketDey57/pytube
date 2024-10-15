@@ -1,24 +1,42 @@
 import os
 import yt_dlp
 from telethon import TelegramClient, events
+import google_auth_oauthlib.flow
+import google.auth.transport.requests
+import google.oauth2.credentials
 
 # Telegram API credentials
-api_id = '8349121'
-api_hash = '9709d9b8c6c1aa3dd50107f97bb9aba6'
+api_id = '15076648'
+api_hash = '7a6e491475ab66bf5097a8a2f295ac98'
 bot_token = '5707293090:AAHGLlHSx101F8T1DQYdcb9_MkRAjyCbt70'
+
+# Google OAuth 2.0 Client Secret JSON file
+client_secrets_file = 'client_secret.json'  # Path to your OAuth 2.0 credentials
 
 # Initialize the Telethon client
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
-# Function to download YouTube video using yt-dlp with cookies for authentication
-def download_youtube_video(url):
+# Function to get OAuth credentials
+def get_google_oauth_credentials():
+    SCOPES = ['https://www.googleapis.com/auth/youtube.readonly']
+    
+    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
+        client_secrets_file, SCOPES)
+    
+    credentials = flow.run_local_server(port=0)
+    return credentials
+
+# Function to download YouTube video using yt-dlp with OAuth credentials
+def download_youtube_video(url, credentials):
     try:
-        # yt-dlp options with cookies for authentication
+        # yt-dlp options with OAuth credentials for authentication
         ydl_opts = {
             'format': 'bestvideo+bestaudio/best',  # Best quality video and audio
             'outtmpl': '%(title)s.%(ext)s',        # Name the file after the video title
             'merge_output_format': 'mp4',          # Merge into an mp4 file
-            'cookies': '/cookies.txt'       # Path to the cookies.txt file
+            'http_headers': {
+                'Authorization': f'Bearer {credentials.token}'
+            }
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -38,8 +56,11 @@ async def youtube_download_handler(event):
     # Notify the user that download has started
     await event.reply("Downloading your video... Please wait!")
 
+    # Get OAuth credentials from Google
+    credentials = get_google_oauth_credentials()
+
     # Download the video
-    video_file = download_youtube_video(youtube_url)
+    video_file = download_youtube_video(youtube_url, credentials)
     
     if video_file and os.path.exists(video_file):
         # Notify the user that the download is complete
