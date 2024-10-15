@@ -1,29 +1,35 @@
 import os
-import pytube
 from telethon import TelegramClient, events
-from telethon.tl.types import InputMediaUploadedDocument
+import yt_dlp
 
 # Telegram API credentials
-api_id = '15076648'
-api_hash = '7a6e491475ab66bf5097a8a2f295ac98'
+api_id = '8349121'
+api_hash = '9709d9b8c6c1aa3dd50107f97bb9aba6'
 bot_token = '5707293090:AAHGLlHSx101F8T1DQYdcb9_MkRAjyCbt70'
 
-# Create the Telethon client
+# Initialize the Telethon client
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
-# Function to download YouTube video in highest quality
+# Function to download YouTube video using yt-dlp
 def download_youtube_video(url):
     try:
-        yt = pytube.YouTube(url)
-        stream = yt.streams.get_highest_resolution()  # Fetch the highest quality available
-        video_file = stream.download()  # Download the video
+        # yt-dlp options to download video with the best quality
+        ydl_opts = {
+            'format': 'bestvideo+bestaudio/best',  # Best video and audio quality
+            'outtmpl': '%(title)s.%(ext)s',        # Name the file after the video title
+            'merge_output_format': 'mp4'           # Merge into an mp4 file
+        }
+        
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            video_file = ydl.prepare_filename(info_dict)  # Get the downloaded file name
         return video_file
     except Exception as e:
         print(f"Error downloading video: {e}")
         return None
 
 # Handler to listen for messages containing YouTube URLs
-@client.on(events.NewMessage(pattern=r'https?://(www\.)?youtube\.com/watch\?v=.+'))
+@client.on(events.NewMessage(pattern=r'https?://(www\.)?(youtube|youtu\.be)\.com/watch\?v=.+'))
 async def youtube_download_handler(event):
     youtube_url = event.text.strip()
     sender = await event.get_sender()
@@ -34,13 +40,13 @@ async def youtube_download_handler(event):
     # Download the video
     video_file = download_youtube_video(youtube_url)
     
-    if video_file:
+    if video_file and os.path.exists(video_file):
         # Notify the user that the download is complete
         await event.reply(f"Download complete. Uploading video to chat...")
 
         # Upload the video to Telegram
         await client.send_file(event.chat_id, video_file, caption="Here is your video!")
-        
+
         # Clean up the video file after sending
         os.remove(video_file)
     else:
