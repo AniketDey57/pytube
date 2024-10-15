@@ -3,9 +3,9 @@ import yt_dlp
 from telethon import TelegramClient, events
 
 # Telegram API credentials
-api_id = 'YOUR_API_ID'
-api_hash = 'YOUR_API_HASH'
-bot_token = 'YOUR_BOT_TOKEN'
+api_id = '8349121'
+api_hash = '9709d9b8c6c1aa3dd50107f97bb9aba6'
+bot_token = '5707293090:AAHGLlHSx101F8T1DQYdcb9_MkRAjyCbt70'
 
 # Initialize the Telethon client
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
